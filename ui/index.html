@@ -104,7 +104,7 @@
     <div id="flags"></div>
     <h1>Options (clinical)</h1>
     <div id="opts"></div>
-    <h1>Risk claims → evidence bindings</h1>
+    <h1>Risk claims → evidence bindings <span class="srcnote" id="evsrc"></span></h1>
     <div id="claims"></div>
     <h1>Capacity — clinician attests each element</h1>
     <div id="capacity"></div>
@@ -161,6 +161,7 @@ async function attest(el){await post('/attest',{element:el});}
 function render(){
   if(!S)return;
   $('case').textContent=`${S.case.name}, ${S.case.age} — ${S.case.chief} (synthetic)`;
+  $('evsrc').textContent=' · evidence via '+(S.evidence_source||'local');
   $('beatname').textContent=S.beat_name;
   $('mode').textContent=S.extraction_mode;
   $('pname').textContent=(S.beat>0)?`${S.case.name.split(' ')[0]} — this page is yours`:'';

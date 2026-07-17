@@ -7,6 +7,14 @@ claim **fail-closed grounded** to a curated evidence table, comprehension verifi
 **teach-back gate**, and two artifacts at the end: a large-print plain-language patient plan
 and a structured, capacity-documented AMA/SDM clinical note.
 
+**The problem:** hospitals hand out discharge instructions, but there is no clear, usable
+surface for shared decision-making — least of all for the against-medical-advice
+conversation, the most dangerous discharge in the building. Agents can automate this
+process; **agentic automation in healthcare kills people when it's wrong or when the judge
+of "correct" is itself wrong.** CONCORD's answer is structural: deterministic fail-closed
+gates outside the model, evidence delivered through a governed data layer, and a human
+identity required for every consequential act.
+
 **The tool informs and documents; the clinician and patient decide. It never advises
 autonomously.**
 

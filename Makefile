@@ -9,6 +9,10 @@ demo:
 demo-forced:
 	CONCORD_FORCED=1 $(PY) server.py
 
+# Evidence delivered through Nexla (requires NEXLA_SESSION_TOKEN in env).
+demo-gov:
+	CONCORD_NEXLA=live CONCORD_NEXSET_ID=435636 $(PY) server.py
+
 rehearse:
 	$(PY) rehearse.py
 

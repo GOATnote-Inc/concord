@@ -11,10 +11,11 @@ import json
 import os
 import time
 
-from . import extract, gates
+from . import evidence_source, extract, gates
 
 DATA = os.path.join(os.path.dirname(__file__), "..", "data")
-EVIDENCE, EVIDENCE_OK = gates.load_evidence(os.path.join(DATA, "evidence.yaml"))
+EVIDENCE, EVIDENCE_OK, EVIDENCE_SOURCE = evidence_source.load(
+    os.path.join(DATA, "evidence.yaml"))
 
 
 def load_segments() -> list[str]:
@@ -98,6 +99,7 @@ def initial_state() -> dict:
                       "patient_plan": None, "clinical_note": None},
         "gate_log": [],
         "evidence_ok": EVIDENCE_OK,
+        "evidence_source": EVIDENCE_SOURCE,
         "extraction_mode": extract.mode_label(),
     }
     # Populate bound-claim text from the evidence table itself (single source of truth).
