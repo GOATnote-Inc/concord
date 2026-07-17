@@ -1,5 +1,9 @@
 # CONCORD
 
+> Sibling build, same day, same fail-closed doctrine, zero shared code:
+> **[SENTINEL](https://github.com/GOATnote-Inc/sentinel)** — the autonomous ops agent whose
+> gate discipline this inherits (and whose name our gate layer carries).
+
 **A shared-decision-making surface for the against-medical-advice conversation.**
 One ambient conversation becomes one decision state, rendered simultaneously to two
 audiences — clinician density on the left, humane clarity on the right — with every risk
@@ -41,7 +45,7 @@ verifies comprehension in her own words → both artifacts generate, capacity-do
 ## Sentinel gates
 
 The fail-closed verification layer is named for its sibling build,
-[SENTINEL](https://github.com/bGOATnote/sentinel) (same day, same doctrine, zero shared
+[SENTINEL](https://github.com/GOATnote-Inc/sentinel) (same day, same doctrine, zero shared
 code): **the model proposes, deterministic gates dispose, nothing fails silently.**
 
 - **Grounding gate** — a claim renders only if bound to an `evidence.yaml` entry; unbound →
