@@ -22,6 +22,11 @@ identity required for every consequential act.
 **The tool informs and documents; the clinician and patient decide. It never advises
 autonomously.**
 
+**Live on Akash right now:**
+http://pbt7v5jj7lf3vc269vlpojl4t4.ingress.cpu.aesservices.net (DSEQ 1784325010856 —
+keyless public instance: deterministic cached extraction + local evidence, labeled honestly
+in the UI; the governed-Nexla + live-Claude configuration runs where credentials live).
+
 ## Run it
 
 ```bash
