@@ -23,12 +23,27 @@
   .case{font-size:13px;color:var(--ink-dim)}
   .beat{margin-left:auto;font-size:12.5px;color:var(--ink-dim)}
   .beat b{color:var(--ink)}
-  #gatebar{min-height:34px;display:flex;align-items:center;gap:10px;padding:4px 18px;
-           background:#fff;border-bottom:1px solid var(--line);font-size:13.5px}
-  .gv{font-weight:700;padding:3px 10px;border-radius:4px;letter-spacing:.5px}
-  .gv.block{background:var(--gate);color:#fff}
+  #gatebar{min-height:42px;display:flex;align-items:center;gap:14px;padding:6px 18px;
+           background:#fff;border-bottom:1px solid var(--line);font-size:14.5px;
+           transition:background .3s}
+  #gatebar.hot{background:var(--gate-soft);border-bottom:2px solid var(--gate)}
+  .gv{font-weight:800;padding:5px 12px;border-radius:4px;letter-spacing:1.2px;
+      font-size:12.5px;text-transform:uppercase}
+  .gv.block{background:var(--gate);color:#fff;animation:gpulse .9s ease 2}
   .gv.pass{color:var(--gate);border:2px solid var(--gate);background:#fff}
+  @keyframes gpulse{50%{box-shadow:0 0 18px rgba(185,58,36,.55)}}
   #gatemsg{color:var(--ink)}
+  kbd{border:1.5px solid var(--gate);color:var(--gate);padding:1px 8px;border-radius:4px;
+      font-weight:700;font-family:inherit;font-size:12px}
+  .beatdots{display:inline-flex;gap:5px;margin-left:10px;vertical-align:middle}
+  .beatdots i{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ink-dim);
+              display:inline-block}
+  .beatdots i.on{background:var(--ink);border-color:var(--ink)}
+  .numchip{font-weight:800;font-size:12px;color:var(--ink-dim);letter-spacing:1px;
+           margin-right:8px}
+  .opt.star .numchip{color:var(--ink)}
+  .badge-recomp{font-size:10.5px;font-weight:800;letter-spacing:1px;background:var(--ink);
+                color:#fff;padding:2px 8px;border-radius:3px;text-transform:uppercase}
   main{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
   .pane{overflow-y:auto;min-height:0;padding:16px 20px}
   /* LEFT — clinician */
@@ -94,7 +109,8 @@
 <header>
   <div class="brand">CONCORD <span>· shared decision surface · Sentinel gates</span></div>
   <div class="case" id="case"></div>
-  <div class="beat">beat <b id="beatname">title — press SPACE to begin</b> · <span id="mode"></span></div>
+  <div class="beat">beat <b id="beatname">title — press SPACE to begin</b>
+    <span class="beatdots" id="beatdots"></span> · <span id="mode"></span></div>
 </header>
 <div id="gatebar"><span style="color:var(--ink-dim)">gate events appear here — the only red on this screen</span></div>
 <main>
@@ -163,6 +179,7 @@ function render(){
   $('case').textContent=`${S.case.name}, ${S.case.age} — ${S.case.chief} (synthetic)`;
   $('evsrc').textContent=' · evidence via '+(S.evidence_source||'local');
   $('beatname').textContent=S.beat_name;
+  $('beatdots').innerHTML=Array.from({length:7},(_,i)=>`<i class="${i<S.beat?'on':''}"></i>`).join('');
   $('mode').textContent=S.extraction_mode;
   $('pname').textContent=(S.beat>0)?`${S.case.name.split(' ')[0]} — this page is yours`:'';
   // problem
@@ -174,7 +191,7 @@ function render(){
   const byId=Object.fromEntries(opts.map(o=>[o.id,o]));
   $('opts').innerHTML=order.filter(i=>byId[i]).map(i=>{const o=byId[i];
     const star=S.recomposed&&o.id===2;
-    return `<div class="opt ${star?'star':''}"><div class="t">${o.id}. ${esc(o.title)}${star?' ★ recomposed around her values':''}</div>
+    return `<div class="opt ${star?'star':''}"><div class="t"><span class="numchip">${String(o.id).padStart(2,'0')}</span>${esc(o.title)} ${star?'<span class="badge-recomp">★ recomposed around her values</span>':''}</div>
       <ul>${o.clinician.map(l=>`<li class="${l.startsWith('LIMITS')?'limits':''}">${esc(l).replace(/\[(E-[A-Z-]+)\]/g,'<span class=echip>$1</span>')}</li>`).join('')}</ul></div>`;}).join('');
   $('popts').innerHTML=order.filter(i=>byId[i]).map(i=>{const o=byId[i];
     const star=S.recomposed&&o.id===2;
@@ -227,8 +244,11 @@ function render(){
   if(gl.length&&gl.length!==lastGateN){
     lastGateN=gl.length;
     const g=gl[gl.length-1];
-    const cls=/BLOCK|LOCKED|NEEDS/.test(g.action)?'block':'pass';
-    $('gatebar').innerHTML=`<span class="gv ${cls}">${esc(g.gate.toUpperCase())}: ${esc(g.action)}</span><span id="gatemsg">${esc(g.detail)}</span>`;
+    const bad=/BLOCK|LOCKED|NEEDS/.test(g.action);
+    const hp=(S.claims||[]).find(c=>c.honeypot&&c.status==='BLOCKED');
+    const hint=(bad&&hp)?`<span style="margin-left:auto;color:var(--ink-dim)">press <kbd>B</kbd> to bind to evidence</span>`:'';
+    $('gatebar').className=bad?'hot':'';
+    $('gatebar').innerHTML=`<span class="gv ${bad?'block':'pass'}">${esc(g.gate.toUpperCase())}: ${esc(g.action)}</span><span id="gatemsg">${esc(g.detail)}</span>${hint}`;
   }
 }
 setInterval(async()=>{try{S=await(await fetch('/state.json')).json();render();}catch(e){}},400);
