@@ -64,3 +64,6 @@ Prior published research by the same team that motivated the gate design: LostBe
 HealthCraft (GOATnote-Inc). No code from any prior repo is used here.
 
 **Demo artifact from a synthetic case — not for clinical use without local review.**
+
+![CONCORD split screen — grounding gate blocking the honeypot](docs/split-honeypot-blocked.png)
+![CONCORD — artifacts generated after both gates pass](docs/split-artifacts.png)
