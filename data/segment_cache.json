@@ -1,0 +1,12 @@
+{
+  "segment1": {
+    "summary": "90-year-old woman with esophageal food bolus impaction x14h, tolerating secretions but not liquids; anticoagulated on apixaban for AF; severe aortic stenosis (not a surgical candidate); prior EGD with erosive esophagitis.",
+    "flags": [
+      "apixaban (AF) — anticoagulated",
+      "severe aortic stenosis — NOT a surgical candidate (no surgical rescue)",
+      "prior EGD: erosive esophagitis",
+      "impaction duration ~14h and counting",
+      "tolerating secretions (not currently an airway emergency)"
+    ]
+  }
+}

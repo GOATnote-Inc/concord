@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CONCORD — shared decision surface</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* Two registers, one screen. LEFT: clinical density. RIGHT: humane clarity.
+     ONE accent (vermilion) reserved EXCLUSIVELY for gate events. */
+  :root{
+    --ink:#1c2733; --ink-dim:#5c6b7a; --line:#d5dde4; --panel:#f2f5f8; --left-bg:#fbfcfd;
+    --right-bg:#faf6ee; --right-ink:#2b2723; --right-dim:#6e6459;
+    --gate:#b93a24; --gate-soft:#f7e8e4; --bind:#f3ede4;
+  }
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%}
+  body{display:flex;flex-direction:column;overflow:hidden;background:var(--left-bg);
+       font-family:"Avenir Next","Seravek","Gill Sans",system-ui,sans-serif;color:var(--ink)}
+  header{display:flex;align-items:baseline;gap:14px;padding:10px 18px;
+         border-bottom:2px solid var(--ink);background:#fff}
+  .brand{font-size:19px;font-weight:700;letter-spacing:4px}
+  .brand span{color:var(--ink-dim);font-weight:400;letter-spacing:0}
+  .case{font-size:13px;color:var(--ink-dim)}
+  .beat{margin-left:auto;font-size:12.5px;color:var(--ink-dim)}
+  .beat b{color:var(--ink)}
+  #gatebar{min-height:34px;display:flex;align-items:center;gap:10px;padding:4px 18px;
+           background:#fff;border-bottom:1px solid var(--line);font-size:13.5px}
+  .gv{font-weight:700;padding:3px 10px;border-radius:4px;letter-spacing:.5px}
+  .gv.block{background:var(--gate);color:#fff}
+  .gv.pass{color:var(--gate);border:2px solid var(--gate);background:#fff}
+  #gatemsg{color:var(--ink)}
+  main{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+  .pane{overflow-y:auto;min-height:0;padding:16px 20px}
+  /* LEFT — clinician */
+  #left{background:var(--left-bg);border-right:2px solid var(--ink);
+        font-family:"SF Compact","Helvetica Neue",Arial,sans-serif;font-size:13.5px;line-height:1.45}
+  #left h1{font-size:12px;letter-spacing:2px;color:var(--ink-dim);margin:14px 0 6px;
+           text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:3px}
+  #left h1:first-child{margin-top:0}
+  .srcnote{font-size:11px;color:var(--ink-dim);font-style:italic}
+  .flag{display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border:1px solid var(--ink);
+        border-radius:3px;font-size:12px;font-weight:600;background:var(--panel)}
+  .opt{border:1px solid var(--line);border-radius:5px;padding:8px 11px;margin:6px 0;background:#fff}
+  .opt.star{border:2px solid var(--ink);box-shadow:3px 3px 0 var(--panel)}
+  .opt .t{font-weight:700;font-size:13.5px}
+  .opt li{margin-left:16px;color:var(--ink-dim)}
+  .opt li.limits{color:var(--ink);font-weight:700}
+  .echip{font-size:10.5px;font-weight:700;color:var(--ink);background:var(--panel);
+         border:1px solid var(--line);padding:0 4px;border-radius:3px}
+  .claim{padding:6px 9px;border-left:3px solid var(--line);margin:5px 0;background:#fff}
+  .claim.blocked{border-left:6px solid var(--gate);background:var(--gate-soft);
+                 text-decoration:none}
+  .claim.blocked .txt{text-decoration:line-through;color:var(--ink-dim)}
+  .claim.blocked .why{color:var(--gate);font-weight:700;font-size:12px}
+  .claim .cit{font-size:11px;color:var(--ink-dim)}
+  .claim.rebound{border-left:6px solid var(--ink);background:var(--bind)}
+  .cap{display:block;margin:4px 0;font-size:13px;cursor:pointer}
+  .cap input{margin-right:7px;transform:scale(1.15)}
+  #bindbtn{background:var(--ink);color:#fff;border:0;padding:6px 12px;border-radius:4px;
+           font:inherit;font-weight:600;cursor:pointer;margin-top:4px}
+  .audit{font-size:11.5px;color:var(--ink-dim);border-top:1px dotted var(--line);padding:3px 0}
+  .audit b{color:var(--gate)}
+  #transcript{font-size:12px;color:var(--ink-dim);white-space:pre-wrap;background:var(--panel);
+              border-radius:5px;padding:8px 10px;max-height:130px;overflow-y:auto}
+  pre.note{font-size:11px;background:var(--panel);padding:8px;border-radius:5px;
+           overflow-x:auto;max-height:260px;overflow-y:auto}
+  /* RIGHT — patient */
+  #right{background:var(--right-bg);color:var(--right-ink);
+         font-family:"Charter","Georgia",serif;font-size:21px;line-height:1.6}
+  #right h1{font-size:26px;font-weight:700;margin:10px 0 8px}
+  #right h2{font-size:16px;letter-spacing:1.5px;color:var(--right-dim);margin:20px 0 6px;
+            text-transform:uppercase;font-family:"Avenir Next",sans-serif}
+  .popt{border:1px solid #ded4c2;border-radius:8px;padding:12px 16px;margin:10px 0;background:#fffdf8}
+  .popt.star{border:3px solid var(--right-ink)}
+  .popt .t{font-weight:700}
+  .popt p{margin:6px 0;color:#463f37}
+  .value{font-style:italic;color:#463f37}
+  #tbwrap textarea{width:100%;font:inherit;font-size:19px;padding:10px;border:2px solid
+                   #ded4c2;border-radius:6px;background:#fffdf8;min-height:84px}
+  #tbwrap button{font:inherit;font-size:18px;padding:8px 18px;border-radius:6px;border:2px
+                 solid var(--right-ink);background:var(--right-ink);color:#fffdf8;cursor:pointer}
+  .cov{display:inline-block;margin:3px 6px 3px 0;padding:3px 12px;border-radius:20px;
+       font-size:15px;border:2px solid #9a8f80;color:#6e6459}
+  .cov.hit{border-color:var(--right-ink);color:var(--right-ink);font-weight:700}
+  .plan{background:#fffdf8;border:2px solid var(--right-ink);border-radius:8px;padding:14px 18px}
+  .plan li{margin:8px 0 8px 18px}
+  .qnote{font-size:15px;color:var(--right-dim);font-style:italic}
+  .hidden{display:none}
+  footer{padding:5px 18px;border-top:1px solid var(--line);background:#fff;font-size:11.5px;
+         color:var(--ink-dim);display:flex;gap:16px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">CONCORD <span>· shared decision surface · Sentinel gates</span></div>
+  <div class="case" id="case"></div>
+  <div class="beat">beat <b id="beatname">title — press SPACE to begin</b> · <span id="mode"></span></div>
+</header>
+<div id="gatebar"><span style="color:var(--ink-dim)">gate events appear here — the only red on this screen</span></div>
+<main>
+  <div class="pane" id="left">
+    <h1>Problem representation <span class="srcnote" id="probsrc"></span></h1>
+    <div id="prob">—</div>
+    <div id="flags"></div>
+    <h1>Options (clinical)</h1>
+    <div id="opts"></div>
+    <h1>Risk claims → evidence bindings</h1>
+    <div id="claims"></div>
+    <h1>Capacity — clinician attests each element</h1>
+    <div id="capacity"></div>
+    <h1>AMA / SDM note</h1>
+    <div id="note">assembles when gates pass…</div>
+    <h1>Ambient transcript (latest)</h1>
+    <div id="transcript">feed pending…</div>
+    <h1>Gate audit trail</h1>
+    <div id="audit"></div>
+  </div>
+  <div class="pane" id="right">
+    <h1 id="pname"></h1>
+    <h2>Your choices</h2>
+    <div id="popts"></div>
+    <h2>What you told us matters most</h2>
+    <div id="pvalues" class="value">—</div>
+    <h2>What we know — with sources</h2>
+    <div id="pclaims"></div>
+    <div id="tbwrap" class="hidden">
+      <h2>Say it back in your words</h2>
+      <p id="tbprompt" style="font-size:19px"></p>
+      <div id="tbcov"></div>
+      <textarea id="tbtext" placeholder="Her words…"></textarea>
+      <button onclick="sendTB()">That's what I understand</button>
+    </div>
+    <div id="pplan" class="hidden"><h2>Your plan — to take home</h2><div class="plan" id="planbody"></div></div>
+  </div>
+</main>
+<footer>
+  <span><b>SPACE</b> advance · <b>B</b> bind blocked claim · <b>R</b> reset</span>
+  <span>synthetic case — no PHI</span>
+  <span style="margin-left:auto">The tool informs and documents; the clinician and patient decide. It never advises autonomously.</span>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+let S=null, lastGateN=0;
+
+async function post(p,b){await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});}
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='TEXTAREA')return;
+  if(e.code==='Space'){e.preventDefault();post('/advance');}
+  if(e.key==='b'||e.key==='B')post('/bind',{claim_id:'c-hp',evidence_id:'E-TIME'});
+  if(e.key==='r'||e.key==='R')post('/reset');
+});
+
+async function sendTB(){
+  await post('/teachback',{words:$('tbtext').value});
+  $('tbtext').value='';
+}
+async function attest(el){await post('/attest',{element:el});}
+
+function render(){
+  if(!S)return;
+  $('case').textContent=`${S.case.name}, ${S.case.age} — ${S.case.chief} (synthetic)`;
+  $('beatname').textContent=S.beat_name;
+  $('mode').textContent=S.extraction_mode;
+  $('pname').textContent=(S.beat>0)?`${S.case.name.split(' ')[0]} — this page is yours`:'';
+  // problem
+  $('prob').textContent=S.problem.summary||'—';
+  $('probsrc').textContent=S.problem.summary?` via ${S.problem.source}`:'';
+  $('flags').innerHTML=(S.problem.flags||[]).map(f=>`<span class="flag">⚠ ${esc(f)}</span>`).join('');
+  // options both panes, ordered
+  const order=S.options_order, opts=S.options||[];
+  const byId=Object.fromEntries(opts.map(o=>[o.id,o]));
+  $('opts').innerHTML=order.filter(i=>byId[i]).map(i=>{const o=byId[i];
+    const star=S.recomposed&&o.id===2;
+    return `<div class="opt ${star?'star':''}"><div class="t">${o.id}. ${esc(o.title)}${star?' ★ recomposed around her values':''}</div>
+      <ul>${o.clinician.map(l=>`<li class="${l.startsWith('LIMITS')?'limits':''}">${esc(l).replace(/\[(E-[A-Z-]+)\]/g,'<span class=echip>$1</span>')}</li>`).join('')}</ul></div>`;}).join('');
+  $('popts').innerHTML=order.filter(i=>byId[i]).map(i=>{const o=byId[i];
+    const star=S.recomposed&&o.id===2;
+    return `<div class="popt ${star?'star':''}"><div class="t">${esc(o.title)}${star?' — built around what you told us':''}</div>
+      ${o.patient.map(p=>`<p>${esc(p)}</p>`).join('')}</div>`;}).join('');
+  // claims (left: all active; right: ONLY bound)
+  const act=(S.claims||[]).filter(c=>c.active);
+  $('claims').innerHTML=act.map(c=>{
+    if(c.status==='BLOCKED')return `<div class="claim blocked"><span class="txt">${esc(c.original_text||c.text)}</span>
+      <div class="why">⛔ GATE: ${esc(c.block_reason||'no source')} — will not display</div>
+      ${c.honeypot?'<button id="bindbtn" onclick="post(\'/bind\',{claim_id:\'c-hp\',evidence_id:\'E-TIME\'})">bind to evidence [E-TIME]</button>':''}</div>`;
+    const q=c.quantity_note?`<div class="cit">◔ ${esc(c.quantity_note)}</div>`:'';
+    return `<div class="claim ${c.original_text?'rebound':''}"><span class="echip">${c.evidence}</span> ${esc(c.text)}
+      <div class="cit">${esc(c.citation||'')}</div>${q}</div>`;}).join('')||'<span class="srcnote">populate at beat 3</span>';
+  $('pclaims').innerHTML=act.filter(c=>c.status==='bound').map(c=>
+    `<p>${esc(c.patient_text||c.text)} <span class="qnote">${c.quantity_note?'(the exact number is being double-checked — we only show verified numbers)':''}</span></p>`).join('')
+    ||'<p class="qnote">—</p>';
+  // values
+  if(S.values.elicited){$('pvalues').innerHTML=
+    `“${esc(S.values.fears[0])}” · “${esc(S.values.goals[0])}”<br>Conditions: ${S.values.conditions.map(esc).join(' · ')}`;}
+  // capacity
+  $('capacity').innerHTML=S.capacity.elements.map(el=>{
+    const done=S.capacity.attested.includes(el);
+    return `<label class="cap"><input type="checkbox" ${done?'checked disabled':''}
+      onclick="attest('${esc(el)}')"> ${esc(el)}</label>`;}).join('');
+  // teach-back
+  const showTB=S.beat>=5&&!S.teachback.passed;
+  $('tbwrap').classList.toggle('hidden',!(S.beat>=5));
+  $('tbprompt').textContent=S.teachback.prompt||'';
+  $('tbcov').innerHTML=S.teachback.required.map(k=>
+    `<span class="cov ${S.teachback.covered.includes(k)?'hit':''}">${esc(k)}</span>`).join('');
+  if(S.teachback.passed)$('tbtext').disabled=true;
+  // artifacts
+  if(!S.artifacts.locked&&S.artifacts.patient_plan){
+    $('pplan').classList.remove('hidden');
+    const pp=S.artifacts.patient_plan;
+    $('planbody').innerHTML=`<b>${esc(pp.title)}</b> — ${esc(pp.date)}
+      <h2 style="margin-top:10px">What we agreed</h2><ul>${pp.what_we_agreed.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+      <h2>Come back immediately if</h2><ul>${pp.come_back_immediately_if.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+      <p>${esc(pp.who_to_call)}</p>`;
+    $('note').innerHTML=`<pre class="note">${esc(JSON.stringify(S.artifacts.clinical_note,null,1))}</pre>`;
+  } else if(S.beat>=6){
+    $('note').innerHTML=`<span style="color:var(--gate);font-weight:700">⛔ ${esc(S.artifacts.reason)}</span>`;
+  }
+  // transcript + audit + gate banner
+  $('transcript').textContent=S.transcript_shown.length?S.transcript_shown[S.transcript_shown.length-1]:'feed pending…';
+  $('audit').innerHTML=(S.gate_log||[]).map(g=>
+    `<div class="audit">[${g.ts}s] <b>${esc(g.gate)}</b> ${esc(g.action)} — ${esc(g.detail)}</div>`).join('');
+  const gl=S.gate_log||[];
+  if(gl.length&&gl.length!==lastGateN){
+    lastGateN=gl.length;
+    const g=gl[gl.length-1];
+    const cls=/BLOCK|LOCKED|NEEDS/.test(g.action)?'block':'pass';
+    $('gatebar').innerHTML=`<span class="gv ${cls}">${esc(g.gate.toUpperCase())}: ${esc(g.action)}</span><span id="gatemsg">${esc(g.detail)}</span>`;
+  }
+}
+setInterval(async()=>{try{S=await(await fetch('/state.json')).json();render();}catch(e){}},400);
+</script>
+</body>
+</html>

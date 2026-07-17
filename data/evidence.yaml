@@ -1,0 +1,90 @@
+# CONCORD evidence table — curated Jul 17, 2026. THE RULE: if a claim is not in this
+# table, it does not get said — by the model, the UI, the artifacts, or us.
+# `quantified.verified` stays false until a clinician has checked the exact figure against
+# the primary source; unverified numbers are WITHHELD by the quantity gate (on purpose).
+evidence:
+  - id: E-TIME
+    claim: "Esophageal food impaction should be resolved endoscopically within 24 hours;
+      risk of mucosal injury, pressure necrosis, and perforation rises with impaction
+      duration."
+    patient_claim: "The longer the food stays stuck, the more the tissue there gets hurt —
+      doctors try to clear it within a day."
+    source: "ASGE Standards of Practice Committee. Management of ingested foreign bodies
+      and food impactions. Gastrointest Endosc 2011;73(6):1085-91."
+    url: "https://doi.org/10.1016/j.gie.2010.11.010"
+    strength: "clinical guideline"
+    quantified: null
+
+  - id: E-SECR
+    claim: "Inability to manage secretions makes esophageal impaction an emergency requiring
+      immediate endoscopy; tolerating secretions permits a short, monitored window."
+    patient_claim: "Because you can swallow your spit safely, we have a little time to do
+      this carefully — if that changes, it becomes an emergency."
+    source: "ASGE Standards of Practice Committee. Gastrointest Endosc 2011;73(6):1085-91."
+    url: "https://doi.org/10.1016/j.gie.2010.11.010"
+    strength: "clinical guideline"
+    quantified: null
+
+  - id: E-ANTICOAG
+    claim: "Ongoing anticoagulation (apixaban) with erosive esophageal mucosa increases
+      bleeding risk both from prolonged impaction and from instrumentation; periprocedural
+      management is individualized."
+    patient_claim: "Your blood thinner makes any irritated tissue bleed more easily — that
+      matters both for waiting and for the procedure."
+    source: "ASGE Standards of Practice Committee. The management of antithrombotic agents
+      for patients undergoing GI endoscopy. Gastrointest Endosc 2016;83(1):3-16."
+    url: "https://doi.org/10.1016/j.gie.2015.09.035"
+    strength: "clinical guideline"
+    quantified: null
+
+  - id: E-SED-AS
+    claim: "Severe aortic stenosis elevates the hemodynamic risk of procedural sedation;
+      anesthesia-supported sedation with invasive monitoring capability is the recommended
+      approach for such patients."
+    patient_claim: "Your heart valve makes sedation riskier than for most people — so a
+      dedicated anesthesia doctor would manage it, with extra monitoring, the whole time."
+    source: "Otto CM, et al. 2020 ACC/AHA Guideline for the Management of Patients With
+      Valvular Heart Disease. Circulation 2021;143(5):e72-e227 (noncardiac/procedural
+      risk sections)."
+    url: "https://doi.org/10.1161/CIR.0000000000000923"
+    strength: "clinical guideline"
+    quantified: null
+
+  - id: E-AMA-OUT
+    claim: "Discharge against medical advice is associated with substantially higher 30-day
+      readmission and mortality than conventional discharge."
+    patient_claim: "People who leave before treatment is finished end up back in the
+      hospital — and die — more often than people who finish care."
+    source: "Glasgow JM, Vaughn-Sarrazin M, Kaboli PJ. Leaving against medical advice (AMA):
+      risk of 30-day mortality and hospital readmission. J Gen Intern Med 2010;25(9):926-9;
+      Southern WN, Nahvi S, Arnsten JH. Increased risk of mortality among patients discharged
+      against medical advice. Am J Med 2012;125(6):594-602."
+    url: "https://doi.org/10.1007/s11606-010-1371-4"
+    strength: "observational cohort studies"
+    quantified: {n: null, out_of: 100, verified: false,
+                 note: "exact relative-risk figures pending clinician verification against
+                        the primary sources — withheld until verified"}
+
+  - id: E-INS
+    claim: "The belief that insurance will not pay after an AMA discharge is a documented
+      myth; chart review found no payment denials attributable to AMA status."
+    patient_claim: "Leaving against advice does NOT cancel your insurance — that's a myth.
+      Your care here stays covered, and you can always come back."
+    source: "Schaefer GP, et al. Financial responsibility of hospitalized patients who left
+      against medical advice: medical urban legend? J Gen Intern Med 2012;27(7):825-30."
+    url: "https://doi.org/10.1007/s11606-012-1984-x"
+    strength: "retrospective chart review"
+    quantified: {n: null, out_of: null, verified: false,
+                 note: "denial count/denominator pending verification — withheld"}
+
+  - id: E-SDM
+    claim: "An AMA discharge handled as shared decision-making — with explicit return
+      precautions and preserved follow-up — maintains the duty of care; AMA does not
+      terminate the clinical relationship."
+    patient_claim: "If you choose to go home, you are still our patient. You can change
+      your mind at any hour and come straight back."
+    source: "Alfandre DJ. 'I'm going home': discharges against medical advice.
+      Mayo Clin Proc 2009;84(3):255-60."
+    url: "https://doi.org/10.4065/84.3.255"
+    strength: "peer-reviewed clinical ethics review"
+    quantified: null
