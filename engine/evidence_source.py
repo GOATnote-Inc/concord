@@ -42,8 +42,17 @@ def _fetch_records() -> list[dict]:
     return list({r["id"]: r for r in records}.values())
 
 
-def load(yaml_path: str) -> tuple[dict, bool, str]:
-    """Returns (evidence_by_id, parse_ok, source_label)."""
+def _fingerprint(ev: dict) -> str:
+    """Content hash of the evidence corpus actually used — goes into the clinical
+    note's provenance so counsel can prove exactly which evidence version informed
+    the disclosure."""
+    import hashlib
+    canon = json.dumps(ev, sort_keys=True).encode()
+    return hashlib.sha256(canon).hexdigest()[:16]
+
+
+def load(yaml_path: str) -> tuple[dict, bool, str, str]:
+    """Returns (evidence_by_id, parse_ok, source_label, content_fingerprint)."""
     if LIVE:
         try:
             records = _fetch_records()
@@ -51,8 +60,9 @@ def load(yaml_path: str) -> tuple[dict, bool, str]:
                 ev = {r["id"]: r for r in records}
                 for e in ev.values():
                     assert e["claim"] and e["source"]
-                return ev, True, f"Nexla NexSet #{NEXSET_ID} (live, governed)"
+                return (ev, True, f"Nexla NexSet #{NEXSET_ID} (live, governed)",
+                        _fingerprint(ev))
         except Exception:
             pass  # fail closed into the local file, honestly labeled
     ev, ok = gates.load_evidence(yaml_path)
-    return ev, ok, "local evidence.yaml (fallback)"
+    return ev, ok, "local evidence.yaml (fallback)", _fingerprint(ev)

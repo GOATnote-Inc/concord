@@ -93,7 +93,17 @@ def ama_sdm_note(state: dict, evidence: dict) -> dict:
             "care_relationship": "continues; AMA does not terminate duty of care [E-SDM]",
         },
         "provenance": {
+            # Legal-counsel transparency: WHICH evidence version informed the
+            # disclosure, WHAT AI was involved and in what mode, and the full
+            # gate decision trail — reconstructable, not asserted.
             "generated_by": "CONCORD (Sentinel gates)",
+            "evidence_corpus": {"source": state.get("evidence_source", "unknown"),
+                                "content_sha256_16": state.get("evidence_sha", ""),
+                                "quantified_figures_policy":
+                                    "withheld unless clinician-verified"},
+            "ai_involvement": {"extraction_model": state.get("extraction_mode", ""),
+                               "role": "drafting + structuring ONLY; no autonomous "
+                                       "advice; all consequential acts human-attested"},
             "gate_log": state["gate_log"],
             "disclaimer": "Demo artifact from a synthetic case. Not for clinical use "
                           "without local review.",
