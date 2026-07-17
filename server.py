@@ -62,6 +62,14 @@ class Handler(BaseHTTPRequestHandler):
                 out = {"bound": ok}
             elif self.path == "/teachback":
                 out = gates.teachback_check(STATE, body.get("words", ""))
+            elif self.path == "/choose":
+                opt = int(body.get("option", 0))
+                if opt in (1, 2, 3) and STATE["options"]:
+                    STATE["chosen_option"] = opt
+                    title = next(o["title"] for o in STATE["options"]
+                                 if o["id"] == opt)
+                    gates.gate_log(STATE, "choice", "PATIENT-SELECTED", title)
+                out = {"chosen": STATE["chosen_option"]}
             elif self.path == "/attest":
                 el = body.get("element", "")
                 if el in STATE["capacity"]["elements"] and \

@@ -62,6 +62,19 @@
   .opt li.limits{color:var(--ink);font-weight:700}
   .echip{font-size:10.5px;font-weight:700;color:var(--ink);background:var(--panel);
          border:1px solid var(--line);padding:0 4px;border-radius:3px}
+  details.claim summary{cursor:pointer;display:flex;gap:8px;align-items:baseline;list-style:none}
+  details.claim summary::-webkit-details-marker{display:none}
+  details.claim summary .clampt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  details.claim[open] summary .clampt{white-space:normal}
+  details.claim summary .more{color:var(--ink-dim);font-size:11px;flex:none}
+  details.fold{margin:14px 0 4px}
+  details.fold>summary{font-size:12px;letter-spacing:2px;color:var(--ink-dim);font-weight:600;
+    text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:3px;
+    cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline}
+  details.fold>summary::-webkit-details-marker{display:none}
+  details.fold>summary .cnt{color:var(--ink);font-weight:800}
+  details.fold>summary::after{content:"expand ▾";margin-left:auto;font-size:10px;letter-spacing:1px}
+  details.fold[open]>summary::after{content:"collapse ▴"}
   .claim{padding:6px 9px;border-left:3px solid var(--line);margin:5px 0;background:#fff}
   .claim.blocked{border-left:6px solid var(--gate);background:var(--gate-soft);
                  text-decoration:none}
@@ -85,10 +98,17 @@
   #right h1{font-size:26px;font-weight:700;margin:10px 0 8px}
   #right h2{font-size:16px;letter-spacing:1.5px;color:var(--right-dim);margin:20px 0 6px;
             text-transform:uppercase;font-family:"Avenir Next",sans-serif}
-  .popt{border:1px solid #ded4c2;border-radius:8px;padding:12px 16px;margin:10px 0;background:#fffdf8}
+  .popt{border:1px solid #ded4c2;border-radius:8px;padding:12px 16px;margin:10px 0;background:#fffdf8;
+        cursor:pointer;transition:transform .15s ease, box-shadow .15s ease}
+  .popt:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(60,45,20,.12)}
   .popt.star{border:3px solid var(--right-ink)}
+  .popt.chosen{border:3px solid var(--right-ink);background:#fbf5e9}
   .popt .t{font-weight:700}
   .popt p{margin:6px 0;color:#463f37}
+  .popt .pick{margin-top:8px;font-family:"Avenir Next",sans-serif;font-size:14.5px;
+              color:var(--right-dim);letter-spacing:.3px}
+  .popt.chosen .pick{color:var(--right-ink);font-weight:700}
+  .opt.chosen{outline:3px solid var(--ink);outline-offset:2px}
   .value{font-style:italic;color:#463f37}
   #tbwrap textarea{width:100%;font:inherit;font-size:19px;padding:10px;border:2px solid
                    #ded4c2;border-radius:6px;background:#fffdf8;min-height:84px}
@@ -126,10 +146,10 @@
     <div id="capacity"></div>
     <h1>AMA / SDM note</h1>
     <div id="note">assembles when gates pass…</div>
-    <h1>Ambient transcript (latest)</h1>
-    <div id="transcript">feed pending…</div>
-    <h1>Gate audit trail</h1>
-    <div id="audit"></div>
+    <details class="fold"><summary>Ambient transcript <span class="cnt" id="tcount"></span></summary>
+      <div id="transcript">feed pending…</div></details>
+    <details class="fold"><summary>Gate audit trail <span class="cnt" id="acount">0</span></summary>
+      <div id="audit"></div></details>
   </div>
   <div class="pane" id="right">
     <h1 id="pname"></h1>
@@ -157,7 +177,11 @@
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+// Diff-render: only touch the DOM when content changed, so open <details>,
+// text selection, and hover states survive the 400ms poll.
+const setHTML=(el,h)=>{if(el._h!==h){el._h=h;el.innerHTML=h;}};
 let S=null, lastGateN=0;
+async function choose(id){await post('/choose',{option:id});}
 
 async function post(p,b){await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});}
 
@@ -189,23 +213,24 @@ function render(){
   // options both panes, ordered
   const order=S.options_order, opts=S.options||[];
   const byId=Object.fromEntries(opts.map(o=>[o.id,o]));
-  $('opts').innerHTML=order.filter(i=>byId[i]).map(i=>{const o=byId[i];
-    const star=S.recomposed&&o.id===2;
-    return `<div class="opt ${star?'star':''}"><div class="t"><span class="numchip">${String(o.id).padStart(2,'0')}</span>${esc(o.title)} ${star?'<span class="badge-recomp">★ recomposed around her values</span>':''}</div>
-      <ul>${o.clinician.map(l=>`<li class="${l.startsWith('LIMITS')?'limits':''}">${esc(l).replace(/\[(E-[A-Z-]+)\]/g,'<span class=echip>$1</span>')}</li>`).join('')}</ul></div>`;}).join('');
-  $('popts').innerHTML=order.filter(i=>byId[i]).map(i=>{const o=byId[i];
-    const star=S.recomposed&&o.id===2;
-    return `<div class="popt ${star?'star':''}"><div class="t">${esc(o.title)}${star?' — built around what you told us':''}</div>
-      ${o.patient.map(p=>`<p>${esc(p)}</p>`).join('')}</div>`;}).join('');
+  setHTML($('opts'),order.filter(i=>byId[i]).map(i=>{const o=byId[i];
+    const star=S.recomposed&&o.id===2, ch=S.chosen_option===o.id;
+    return `<div class="opt ${star?'star':''} ${ch?'chosen':''}"><div class="t"><span class="numchip">${String(o.id).padStart(2,'0')}</span>${esc(o.title)} ${star?'<span class="badge-recomp">★ recomposed around her values</span>':''}</div>
+      <ul>${o.clinician.map(l=>`<li class="${l.startsWith('LIMITS')?'limits':''}">${esc(l).replace(/\[(E-[A-Z-]+)\]/g,'<span class=echip>$1</span>')}</li>`).join('')}</ul></div>`;}).join(''));
+  setHTML($('popts'),order.filter(i=>byId[i]).map(i=>{const o=byId[i];
+    const star=S.recomposed&&o.id===2, ch=S.chosen_option===o.id;
+    return `<div class="popt ${star?'star':''} ${ch?'chosen':''}" onclick="choose(${o.id})"><div class="t">${esc(o.title)}${star?' — built around what you told us':''}</div>
+      ${o.patient.map(p=>`<p>${esc(p)}</p>`).join('')}
+      <div class="pick">${ch?'✓ your choice — both pages updated':'tap this if it sounds right to you'}</div></div>`;}).join(''));
   // claims (left: all active; right: ONLY bound)
   const act=(S.claims||[]).filter(c=>c.active);
-  $('claims').innerHTML=act.map(c=>{
+  setHTML($('claims'),act.map(c=>{
     if(c.status==='BLOCKED')return `<div class="claim blocked"><span class="txt">${esc(c.original_text||c.text)}</span>
       <div class="why">⛔ GATE: ${esc(c.block_reason||'no source')} — will not display</div>
       ${c.honeypot?'<button id="bindbtn" onclick="post(\'/bind\',{claim_id:\'c-hp\',evidence_id:\'E-TIME\'})">bind to evidence [E-TIME]</button>':''}</div>`;
     const q=c.quantity_note?`<div class="cit">◔ ${esc(c.quantity_note)}</div>`:'';
-    return `<div class="claim ${c.original_text?'rebound':''}"><span class="echip">${c.evidence}</span> ${esc(c.text)}
-      <div class="cit">${esc(c.citation||'')}</div>${q}</div>`;}).join('')||'<span class="srcnote">populate at beat 3</span>';
+    return `<details class="claim ${c.original_text?'rebound':''}"><summary><span class="echip">${c.evidence}</span><span class="clampt">${esc(c.text)}</span><span class="more">source</span></summary>
+      <div class="cit">${esc(c.citation||'')}</div>${q}</details>`;}).join('')||'<span class="srcnote">populate at beat 3</span>');
   $('pclaims').innerHTML=act.filter(c=>c.status==='bound').map(c=>
     `<p>${esc(c.patient_text||c.text)} <span class="qnote">${c.quantity_note?'(the exact number is being double-checked — we only show verified numbers)':''}</span></p>`).join('')
     ||'<p class="qnote">—</p>';
@@ -238,8 +263,10 @@ function render(){
   }
   // transcript + audit + gate banner
   $('transcript').textContent=S.transcript_shown.length?S.transcript_shown[S.transcript_shown.length-1]:'feed pending…';
-  $('audit').innerHTML=(S.gate_log||[]).map(g=>
-    `<div class="audit">[${g.ts}s] <b>${esc(g.gate)}</b> ${esc(g.action)} — ${esc(g.detail)}</div>`).join('');
+  $('tcount').textContent=S.transcript_shown.length?`(${S.transcript_shown.length} segments)`:'';
+  $('acount').textContent=(S.gate_log||[]).length;
+  setHTML($('audit'),(S.gate_log||[]).map(g=>
+    `<div class="audit">[${g.ts}s] <b>${esc(g.gate)}</b> ${esc(g.action)} — ${esc(g.detail)}</div>`).join(''));
   const gl=S.gate_log||[];
   if(gl.length&&gl.length!==lastGateN){
     lastGateN=gl.length;
