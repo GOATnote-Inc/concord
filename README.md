@@ -1,5 +1,7 @@
 # CONCORD
 
+> **Hackathon build (2026-07-17), frozen, not maintained. Not for clinical use.**
+
 > Sibling build, same day, same fail-closed doctrine, zero shared code:
 > **[SENTINEL](https://github.com/GOATnote-Inc/sentinel)** — the autonomous ops agent whose
 > gate discipline this inherits (and whose name our gate layer carries).
@@ -16,16 +18,17 @@ surface for shared decision-making — least of all for the against-medical-advi
 conversation, the most dangerous discharge in the building. Agents can automate this
 process; **agentic automation in healthcare kills people when it's wrong or when the judge
 of "correct" is itself wrong.** CONCORD's answer is structural: deterministic fail-closed
-gates outside the model, evidence delivered through a governed data layer, and a human
-identity required for every consequential act.
+gates outside the model and evidence delivered through a governed data layer. Clinician
+attestation in this build is an unauthenticated checkbox — identity binding for
+consequential acts is part of the design intent but is **not implemented** here (see the
+honesty ledger below).
 
 **The tool informs and documents; the clinician and patient decide. It never advises
 autonomously.**
 
-**Live on Akash right now:**
-http://pbt7v5jj7lf3vc269vlpojl4t4.ingress.cpu.aesservices.net (DSEQ 1784325010856 —
-keyless public instance: deterministic cached extraction + local evidence, labeled honestly
-in the UI; the governed-Nexla + live-Claude configuration runs where credentials live).
+**Was deployed on Akash for the event** (DSEQ 1784325010856 — a keyless public instance:
+deterministic cached extraction + local evidence, labeled honestly in the UI; the
+governed-Nexla + live-Claude configuration ran where credentials live).
 
 ## Run it
 
@@ -34,7 +37,7 @@ make venv
 make demo            # live Claude extraction if ANTHROPIC_API_KEY is set
 make demo-forced     # fully deterministic (no network, no key)
 # open http://localhost:8901 — SPACE advances the consultation, B binds the blocked claim
-make rehearse-forced # 13 automated gate checks; PASS required before any demo
+make rehearse-forced # 14 automated gate checks; PASS required before any demo
 ```
 
 ## The golden case (synthetic — no PHI)
@@ -62,7 +65,11 @@ code): **the model proposes, deterministic gates dispose, nothing fails silently
   is shown that a clinician hasn't checked against the primary source.
 - **Teach-back gate** — artifacts stay locked until the patient's own words cover the
   critical-risk set (deterministic keyword coverage); cap exhausted → "NEEDS CLINICIAN,"
-  logged, never silent.
+  logged, never silent — and sticky: once escalated, later attempts cannot pass the gate
+  or unlock artifacts until a clinician resets the session.
+- **Flag gate** — model-extracted safety flags render (and reach the clinical note) only
+  if grounded in the shown transcript (deterministic token presence); ungrounded flags are
+  withheld, visibly, on the clinician pane and logged.
 - **Scope lock** — nothing in the engine can modify the evidence table or the gates at
   runtime.
 
@@ -72,7 +79,8 @@ code): **the model proposes, deterministic gates dispose, nothing fails silently
 |---|---|
 | Everything in this repo | **written Jul 17, 2026** (commit log is the provenance) |
 | Claude structured-output extraction (`claude-haiku-4-5`), 10s timeout → cache | real, live-verified |
-| Grounding / quantity / teach-back gates, capacity attestation, artifact locks | real, deterministic, 13 automated checks |
+| Grounding / quantity / teach-back gates, capacity attestation, artifact locks | real, deterministic, 14 automated checks |
+| Identity / auth | **not built** — `/attest`, `/bind`, `/choose` are unauthenticated; clinician attestation is a checkbox with no identity behind it |
 | Eleanor case + staged honeypot claim | seeded demo data (disclosed; the honeypot claim exists verbatim in the transcript so the gate fires deterministically, not by model luck) |
 | `evidence.yaml` citations (ASGE 2011/2016, ACC/AHA 2020, JGIM 2010/2012, Am J Med 2012, Mayo Clin Proc 2009) | real literature; quantified figures deliberately withheld pending clinician verification |
 | Partner alignment | Claude (Anthropic) is the live extraction engine; the ambient-conversation-as-input paradigm is the Abridge model, downstream of ambient capture and complementary to it; the venture case is the close of the pitch |
