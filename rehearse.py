@@ -118,6 +118,23 @@ def main() -> int:
             checks["note carries evidence-bound risk table"] = (
                 len(note["risk_disclosure_evidence_table"]) >= 5)
         req("/advance", {})                      # b7 close
+
+        # sticky escalation: once NEEDS CLINICIAN, nothing talks past the gate
+        req("/reset", {})
+        for _ in range(5):
+            req("/advance", {})                  # b1..b5
+        req("/bind", {"claim_id": "c-hp", "evidence_id": "E-TIME"})
+        for _ in range(3):
+            req("/teachback", {"words": BAD_TEACHBACK})   # cap exhausted -> escalated
+        r4 = req("/teachback", {"words": ELEANOR_TEACHBACK})  # her real words, too late
+        s = req("/state.json")
+        for el in s["capacity"]["elements"]:
+            req("/attest", {"element": el})
+        req("/advance", {})                      # b6 — must stay locked
+        s = req("/state.json")
+        checks["NEEDS CLINICIAN is sticky — later words cannot pass or unlock"] = (
+            not r4["passed"] and s["teachback"]["needs_clinician"]
+            and s["artifacts"]["locked"])
     finally:
         srv.kill()
         srv.wait(timeout=10)

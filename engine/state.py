@@ -80,7 +80,8 @@ def initial_state() -> dict:
         "beat_name": "title",
         "case": {"name": "Eleanor Hale", "age": 90,
                  "chief": "esophageal food bolus impaction, ~14h"},
-        "problem": {"summary": "", "flags": [], "source": "pending extraction"},
+        "problem": {"summary": "", "flags": [], "flags_withheld": [],
+                    "source": "pending extraction"},
         "transcript_shown": [],
         "options": [],
         "options_order": [1, 2, 3],
@@ -124,7 +125,8 @@ def beat_1_ambient_history(st: dict) -> None:
     st["transcript_shown"].append(SEGMENTS[0])
     rep = extract.problem_representation(SEGMENTS[0])
     st["problem"] = {"summary": rep["summary"], "flags": rep["flags"],
-                     "source": rep["source"]}
+                     "flags_withheld": [], "source": rep["source"]}
+    gates.flag_check(st)  # model flags never bypass the gates
 
 
 def beat_2_options_board(st: dict) -> None:

@@ -17,7 +17,7 @@ TOKEN = os.environ.get("NEXLA_SESSION_TOKEN", "")
 NEXSET_ID = os.environ.get("CONCORD_NEXSET_ID", "")
 LIVE = os.environ.get("CONCORD_NEXLA", "local") == "live" and TOKEN and NEXSET_ID
 
-# Verified against this instance (nexla-prod-gcp): legacy dataset-samples endpoint;
+# Verified against a Nexla production instance: legacy dataset-samples endpoint;
 # records come back wrapped as {"nexlaMetaData": ..., "rawMessage": {<record>}}.
 RECORDS_PATH = "/data_sets/{id}/samples?output_only=1&count=50"
 

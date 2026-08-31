@@ -55,6 +55,8 @@
   .srcnote{font-size:11px;color:var(--ink-dim);font-style:italic}
   .flag{display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border:1px solid var(--ink);
         border-radius:3px;font-size:12px;font-weight:600;background:var(--panel)}
+  .flag.withheld{border:1px dashed var(--gate);color:var(--ink-dim);background:var(--gate-soft);
+        text-decoration:line-through;font-weight:400}
   .opt{border:1px solid var(--line);border-radius:5px;padding:8px 11px;margin:6px 0;background:#fff}
   .opt.star{border:2px solid var(--ink);box-shadow:3px 3px 0 var(--panel)}
   .opt .t{font-weight:700;font-size:13.5px}
@@ -209,7 +211,8 @@ function render(){
   // problem
   $('prob').textContent=S.problem.summary||'—';
   $('probsrc').textContent=S.problem.summary?` via ${S.problem.source}`:'';
-  $('flags').innerHTML=(S.problem.flags||[]).map(f=>`<span class="flag">⚠ ${esc(f)}</span>`).join('');
+  $('flags').innerHTML=(S.problem.flags||[]).map(f=>`<span class="flag">⚠ ${esc(f)}</span>`).join('')
+    +(S.problem.flags_withheld||[]).map(f=>`<span class="flag withheld" title="model extraction not grounded in transcript — withheld">${esc(f)} — withheld (ungrounded)</span>`).join('');
   // options both panes, ordered
   const order=S.options_order, opts=S.options||[];
   const byId=Object.fromEntries(opts.map(o=>[o.id,o]));

@@ -1,6 +1,6 @@
 """Sentinel gates — CONCORD's fail-closed verification layer. Deterministic, outside the model.
 
-Named for its sibling build SENTINEL (github.com/bGOATnote/sentinel, built earlier today):
+Named for its sibling build SENTINEL (github.com/GOATnote-Inc/sentinel, built earlier today):
 same doctrine — the model proposes, deterministic gates dispose, nothing fails silently.
 
 - Grounding gate: a claim renders ONLY if bound to an evidence-table id. Unbound -> BLOCKED
@@ -10,7 +10,10 @@ same doctrine — the model proposes, deterministic gates dispose, nothing fails
   is marked verified. Unverified -> the number is withheld, visibly.
 - Teach-back gate: artifacts stay LOCKED until the patient's own words cover the critical-risk
   set for the chosen option (deterministic keyword-set coverage). Cap exhausted -> NEEDS
-  CLINICIAN, logged, never silent.
+  CLINICIAN, logged, never silent — and sticky: once escalated, later attempts cannot pass
+  the gate or unlock artifacts.
+- Flag gate: model-extracted safety flags render (and reach the clinical note) only if
+  grounded in the shown transcript; ungrounded flags are withheld, visibly, and logged.
 - Scope lock: nothing in the engine may modify the evidence table or this file at runtime.
 """
 from __future__ import annotations
@@ -82,6 +85,52 @@ def bind_claim(state: dict, evidence: dict, claim_id: str, evidence_id: str) -> 
     return True
 
 
+# --- extraction-flag grounding ----------------------------------------------
+
+# Small stopword set; the length floor (>= 4) already drops most function words.
+_FLAG_STOPWORDS = {"with", "from", "this", "that", "them", "they", "have", "does",
+                   "will", "when", "then", "than", "into", "over", "under"}
+
+
+def _flag_tokens(flag: str) -> list[str]:
+    out, cur = [], []
+    for ch in flag.lower():
+        if ch.isalpha():
+            cur.append(ch)
+        else:
+            if cur:
+                out.append("".join(cur))
+            cur = []
+    if cur:
+        out.append("".join(cur))
+    return [t for t in out if len(t) >= 4 and t not in _FLAG_STOPWORDS]
+
+
+def flag_check(state: dict) -> None:
+    """Model-extracted safety flags render only if grounded in the shown transcript.
+
+    Deterministic, same style as the teach-back: a flag is grounded if any of its
+    significant tokens (>= 4 letters, not a stopword) appears in the transcript shown
+    so far. Ungrounded flags never bypass the gates: they are moved to
+    problem.flags_withheld (rendered as visibly withheld on the clinician pane, kept
+    out of the patient pane and the clinical note) and logged. Fail-closed: a flag
+    with no significant tokens is withheld.
+    """
+    transcript = "\n".join(state["transcript_shown"]).lower()
+    grounded, withheld = [], []
+    for f in state["problem"].get("flags", []):
+        toks = _flag_tokens(f)
+        if toks and any(t in transcript for t in toks):
+            grounded.append(f)
+        else:
+            withheld.append(f)
+            gate_log(state, "flags", "WITHHELD",
+                     f"“{f[:60]}” — model extraction not grounded in transcript "
+                     f"— withheld from display and note")
+    state["problem"]["flags"] = grounded
+    state["problem"]["flags_withheld"] = withheld
+
+
 # --- teach-back -------------------------------------------------------------
 
 TEACHBACK_CAP = 3
@@ -98,10 +147,17 @@ COVERAGE = {
 
 
 def teachback_check(state: dict, patient_words: str) -> dict:
+    tb = state["teachback"]
+    if tb["needs_clinician"]:
+        # Sticky escalation (fail-closed): once NEEDS CLINICIAN, no later attempt can
+        # pass the gate — a clinician must take over (reset starts a new session).
+        still = [k for k in COVERAGE if k not in tb["covered"]]
+        gate_log(state, "teach-back", "NEEDS CLINICIAN",
+                 "escalated — further attempts cannot pass the gate; clinician required")
+        return {"covered_now": [], "missing": still, "passed": False}
     words = patient_words.lower()
     covered = [k for k, kws in COVERAGE.items() if any(w in words for w in kws)]
     missing = [k for k in COVERAGE if k not in covered]
-    tb = state["teachback"]
     tb["attempts"] += 1
     tb["covered"] = sorted(set(tb["covered"]) | set(covered))
     still = [k for k in COVERAGE if k not in tb["covered"]]
@@ -122,6 +178,8 @@ def teachback_check(state: dict, patient_words: str) -> dict:
 
 
 def artifacts_unlocked(state: dict) -> tuple[bool, str]:
+    if state["teachback"]["needs_clinician"]:
+        return False, "escalated to clinician — artifacts stay locked"
     if not state["teachback"]["passed"]:
         return False, "teach-back gate not passed"
     if len(state["capacity"]["attested"]) < len(state["capacity"]["elements"]):

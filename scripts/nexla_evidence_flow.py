@@ -4,7 +4,7 @@
   -> wait for the auto-detected NexSet -> read samples back with the session token.
 
 Prints CONCORD_NEXSET_ID=<id> on success. Uses only stdlib + the session token env:
-  NEXLA_API_URL, NEXLA_SESSION_TOKEN   (set -a; source ../loop/.../starter-kit/.env)
+  NEXLA_API_URL, NEXLA_SESSION_TOKEN   (export both in your shell first)
 """
 from __future__ import annotations
 
